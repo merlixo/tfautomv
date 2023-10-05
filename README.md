@@ -125,6 +125,29 @@ to a `moves.tf` file.
 
 That's all there is to it!
 
+### Generating `moved` blocks with TFE Cloud
+
+If you are using TFE CLoud as backend, then you must export the Plan using TFE APIs, 
+and then run `tfautomv` with the `-plan-file` option.
+
+```bash
+curl \
+  --header "Authorization: Bearer $TOKEN" \
+  --header "Content-Type: application/vnd.api+json" \
+  --location \
+  https://app.terraform.io/api/v2/runs/<run-id>plan/json-output |
+  > my-plan.json
+```
+
+```bash
+tfautomv -plan-file my-plan.json
+```
+
+This will load the plan from the file, analyse it, and then write `moved` blocks
+to a `moves.tf` file.
+
+That's all there is to it!
+
 ### Generating `terraform state mv` commands
 
 If you are using a version of Terraform older than v1.1 or don't want to use
