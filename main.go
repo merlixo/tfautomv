@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	_ "embed"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
@@ -14,6 +15,8 @@ import (
 	"github.com/busser/tfautomv/internal/terraform"
 	"github.com/busser/tfautomv/internal/tfautomv"
 	"github.com/busser/tfautomv/internal/tfautomv/ignore"
+
+	tfjson "github.com/hashicorp/terraform-json"
 )
 
 func main() {
@@ -84,25 +87,36 @@ func run() error {
 		return err
 	}
 
-	logln("Running \"terraform plan\"...")
+	var plan *tfjson.Plan
 
-	planFile, err := os.CreateTemp("", "tfautomv.*.plan")
-	if err != nil {
-		return err
+	if jsonPlanFile == "" {
+
+		logln("Running \"terraform plan\"...")
+		planFile, err := os.CreateTemp("", "tfautomv.*.plan")
+		if err != nil {
+			return err
+		}
+		defer os.Remove(planFile.Name())
+
+		if _, err := tf.Plan(context.TODO(), tfexec.Out(planFile.Name())); err != nil {
+			return err
+		}
+		plan, err = tf.ShowPlanFile(context.TODO(), planFile.Name())
+		if err != nil {
+			return err
+		}
+
+	} else {
+		jsonPlan, err := os.ReadFile(jsonPlanFile)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(jsonPlan, &plan); err != nil {
+			return err
+		}
 	}
-	// defer os.Remove(planFile.Name())
 
-	// tf.SetStdout(planFile)
-
-	if _, err := tf.PlanJSON(context.TODO(), planFile); err != nil {
-		return err
-	}
-
-	plan, err := tf.ShowPlanFile(context.TODO(), planFile.Name())
-	if err != nil {
-		return err
-	}
-
+	logln("Analysing plan...")
 	analysis, err := tfautomv.AnalysisFromPlan(plan, rules)
 	if err != nil {
 		return err
@@ -159,6 +173,7 @@ var (
 	printVersion bool
 	showAnalysis bool
 	terraformBin string
+	jsonPlanFile string
 )
 
 func parseFlags() {
@@ -169,6 +184,7 @@ func parseFlags() {
 	flag.BoolVar(&showAnalysis, "show-analysis", false, "show detailed analysis of Terraform plan")
 	flag.BoolVar(&printVersion, "version", false, "print version and exit")
 	flag.StringVar(&terraformBin, "terraform-bin", "terraform", "terraform binary to use")
+	flag.StringVar(&jsonPlanFile, "plan-file", "", "local file with Plan in json format")
 
 	flag.Parse()
 }
