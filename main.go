@@ -85,7 +85,8 @@ func run() error {
 	}
 
 	logln("Running \"terraform plan\"...")
-	planFile, err := os.CreateTemp("", "tfautomv.*.plan")
+	/* 
+        planFile, err := os.CreateTemp("", "tfautomv.*.plan")
 	if err != nil {
 		return err
 	}
@@ -97,7 +98,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
-
+        */
+        if plan, err := tf.Plan(context.TODO()); err != nil {
+		return err
+	}
+	
 	analysis, err := tfautomv.AnalysisFromPlan(plan, rules)
 	if err != nil {
 		return err
