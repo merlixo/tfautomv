@@ -85,24 +85,24 @@ func run() error {
 	}
 
 	logln("Running \"terraform plan\"...")
-	/* 
-        planFile, err := os.CreateTemp("", "tfautomv.*.plan")
+
+	planFile, err := os.CreateTemp("", "tfautomv.*.plan")
 	if err != nil {
 		return err
 	}
-	defer os.Remove(planFile.Name())
-	if _, err := tf.Plan(context.TODO(), tfexec.Out(planFile.Name())); err != nil {
+	// defer os.Remove(planFile.Name())
+
+	// tf.SetStdout(planFile)
+
+	if _, err := tf.PlanJSON(context.TODO(), planFile); err != nil {
 		return err
 	}
+
 	plan, err := tf.ShowPlanFile(context.TODO(), planFile.Name())
 	if err != nil {
 		return err
 	}
-        */
-        if plan, err := tf.Plan(context.TODO()); err != nil {
-		return err
-	}
-	
+
 	analysis, err := tfautomv.AnalysisFromPlan(plan, rules)
 	if err != nil {
 		return err
