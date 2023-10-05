@@ -81,16 +81,16 @@ func run() error {
 	// Terraform's plan contains a lot of information. For now, this is all we
 	// need. In the future, we may choose to use other sources of information.
 
-	logln("Running \"terraform init\"...")
-	err = tf.Init(ctx)
-	if err != nil {
-		return err
-	}
-
 	var plan *tfjson.Plan
 
 	if jsonPlanFile == "" {
 
+		logln("Running \"terraform init\"...")
+		err = tf.Init(ctx)
+		if err != nil {
+			return err
+		}
+		
 		logln("Running \"terraform plan\"...")
 		planFile, err := os.CreateTemp("", "tfautomv.*.plan")
 		if err != nil {
